@@ -16,7 +16,7 @@ pub struct Message {
 
 impl Message {
     pub fn add_content(&mut self, content: &str) {
-        self.content.push_str(content.trim_end());
+        self.content.push_str(content);
     }
 }
 

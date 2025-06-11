@@ -24,7 +24,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
 
         let message = chat.new_message(MessageRole::User);
         message.add_content(&prompt);
-        message.content.trim_end();
+        message.content = message.content.trim_end().to_string();
 
         let client = Client::new();
 
@@ -52,7 +52,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
                 }
             }
         }
-        message.content.trim_end();
+        message.content = message.content.trim_end().to_string();
 
         println!();
     }
