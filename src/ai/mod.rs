@@ -15,16 +15,18 @@ struct StreamChunk {
 }
 
 pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
-    let mut chat = Conversation::new();
+    let mut prompt_builder = PromptBuilder::new();
     loop {
         let mut prompt = String::new();
         print!(">>> ");
         io::stdout().flush()?;
         io::stdin().read_line(&mut prompt)?;
 
-        let message = chat.new_message(MessageRole::User);
+        let message = Message::new(MessageRole::User);
         message.add_content(&prompt);
         message.content = message.content.trim_end().to_string();
+
+        prompt_builder.add_message(message);
 
         let client = Client::new();
 
@@ -32,7 +34,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
             .post("http://localhost:11434/api/generate")
             .json(&serde_json::json!({
                 "model": "llama3",
-                "prompt": chat.to_string(),
+                "prompt": prompt_builder.make_prompt(),
                 "stream": true
             }))
             .send()
@@ -40,7 +42,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
 
         let mut stream = res.bytes_stream();
 
-        let message = chat.new_message(MessageRole::Ai);
+        let message = Message::new(MessageRole::Ai);
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
             for line in std::str::from_utf8(&chunk)?.lines() {
@@ -53,6 +55,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
             }
         }
         message.content = message.content.trim_end().to_string();
+        prompt_builder.add_message(message);
 
         println!();
     }
