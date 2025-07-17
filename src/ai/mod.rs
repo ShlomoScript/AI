@@ -22,11 +22,11 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
         io::stdout().flush()?;
         io::stdin().read_line(&mut prompt)?;
 
-        let message = Message::new(MessageRole::User);
+        let mut message = Message::new(MessageRole::User);
         message.add_content(&prompt);
         message.content = message.content.trim_end().to_string();
 
-        prompt_builder.add_message(message);
+        prompt_builder.add_message(message).await?;
 
         let client = Client::new();
 
@@ -42,7 +42,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
 
         let mut stream = res.bytes_stream();
 
-        let message = Message::new(MessageRole::Ai);
+        let mut message = Message::new(MessageRole::Ai);
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
             for line in std::str::from_utf8(&chunk)?.lines() {
@@ -55,7 +55,7 @@ pub async fn prompt_loop() -> Result<(), Box<dyn Error>> {
             }
         }
         message.content = message.content.trim_end().to_string();
-        prompt_builder.add_message(message);
+        prompt_builder.add_message(message).await?;
 
         println!();
     }

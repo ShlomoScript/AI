@@ -1,1 +1,2 @@
-mod sql_memory;
+pub mod embeddings;
+pub mod sql_memory;

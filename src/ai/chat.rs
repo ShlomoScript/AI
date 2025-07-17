@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::memory;
+
 pub struct PromptBuilder {
     pub messages: Vec<Message>,
 }
@@ -22,8 +24,13 @@ impl PromptBuilder {
                 .join("")
         )
     }
-    pub fn add_message(&mut self, message: Message) {
+    pub async fn add_message(
+        &mut self,
+        mut message: Message,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        message.embed_message().await?;
         self.messages.push(message);
+        Ok(())
     }
 }
 
@@ -52,6 +59,11 @@ impl Message {
     }
     pub fn add_content(&mut self, content: &str) {
         self.content.push_str(content);
+    }
+    pub async fn embed_message(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        use memory::embeddings::get_embedding;
+        self.embedding = Some(get_embedding(&self.content).await?);
+        Ok(())
     }
 }
 
